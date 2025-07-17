@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dr. HealthMate - AI Medical Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="chat-header">
+            <div class="doctor-info">
+                <div class="doctor-avatar">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div class="doctor-details">
+                    <h2>Dr. HealthMate</h2>
+                    <span class="status online">
+                        <i class="fas fa-circle"></i> Online
+                    </span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button id="exportBtn" class="action-btn" title="Export Chat">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button id="clearBtn" class="action-btn" title="Clear Chat">
+                    <i class="fas fa-trash"></i>
+                </button>
+                <button id="settingsBtn" class="action-btn" title="Settings">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions" id="quickActions">
+            <div class="quick-action" data-action="Check symptoms">
+                <i class="fas fa-search"></i>
+                <span>Check symptoms</span>
+            </div>
+            <div class="quick-action" data-action="Medication info">
+                <i class="fas fa-pills"></i>
+                <span>Medication info</span>
+            </div>
+            <div class="quick-action" data-action="Health tips">
+                <i class="fas fa-lightbulb"></i>
+                <span>Health tips</span>
+            </div>
+            <div class="quick-action" data-action="Exercise advice">
+                <i class="fas fa-running"></i>
+                <span>Exercise</span>
+            </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="chatMessages">
+            {% for message in chat_history %}
+                <div class="message {{ 'user-message' if message.sender == 'You' else 'bot-message' }}">
+                    <div class="message-avatar">
+                        {% if message.sender == 'You' %}
+                            <i class="fas fa-user"></i>
+                        {% else %}
+                            <i class="fas fa-user-md"></i>
+                        {% endif %}
+                    </div>
+                    <div class="message-content">
+                        <div class="message-header">
+                            <span class="sender">{{ message.sender }}</span>
+                            <span class="timestamp">{{ message.timestamp }}</span>
+                        </div>
+                        <div class="message-text">{{ message.message | safe }}</div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Typing Indicator -->
+        <div class="typing-indicator" id="typingIndicator" style="display: none;">
+            <div class="message bot-message">
+                <div class="message-avatar">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div class="message-content">
+                    <div class="typing-dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Suggestions -->
+        <div class="suggestions" id="suggestions" style="display: none;">
+            <div class="suggestions-header">
+                <i class="fas fa-lightbulb"></i>
+                <span>Suggested questions:</span>
+            </div>
+            <div class="suggestions-list" id="suggestionsList"></div>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="chat-input-container">
+            <div class="chat-input">
+                <button class="attachment-btn" id="attachmentBtn">
+                    <i class="fas fa-paperclip"></i>
+                </button>
+                <input type="text" id="messageInput" placeholder="Ask your medical question..." autofocus>
+                <button class="emoji-btn" id="emojiBtn">
+                    <i class="fas fa-smile"></i>
+                </button>
+                <button class="voice-btn" id="voiceBtn">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button class="send-btn" id="sendBtn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            <div class="input-suggestions" id="inputSuggestions"></div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Settings</h3>
+                <button class="close-btn" id="closeSettings" type="button">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="soundEnabled" checked>
+                        <span>Enable sound notifications</span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="darkMode">
+                        <span>Dark mode</span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="autoSuggestions" checked>
+                        <span>Show auto-suggestions</span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label for="fontSize">Font size:</label>
+                    <select id="fontSize">
+                        <option value="small">Small</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="large">Large</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emoji Picker -->
+    <div class="emoji-picker" id="emojiPicker" style="display: none;">
+        <div class="emoji-grid">
+            <span class="emoji" data-emoji="😊">😊</span>
+            <span class="emoji" data-emoji="😂">😂</span>
+            <span class="emoji" data-emoji="😍">😍</span>
+            <span class="emoji" data-emoji="🤔">🤔</span>
+            <span class="emoji" data-emoji="😢">😢</span>
+            <span class="emoji" data-emoji="😴">😴</span>
+            <span class="emoji" data-emoji="🤒">🤒</span>
+            <span class="emoji" data-emoji="💊">💊</span>
+            <span class="emoji" data-emoji="🏥">🏥</span>
+            <span class="emoji" data-emoji="❤️">❤️</span>
+            <span class="emoji" data-emoji="👍">👍</span>
+            <span class="emoji" data-emoji="🙏">🙏</span>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Dr. HealthMate is thinking...</p>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
